@@ -1,0 +1,102 @@
+Bootstrap: docker
+From: ubuntu:22.04
+
+%labels
+    Author      Tannistha Nandi
+    Version     0.9.0
+    Description Bandage – Bioinformatics Application for Navigating De novo Assembly Graphs Easily (https://github.com/rrwick/Bandage)
+
+%help
+    Bandage is a GUI program for visualising de novo assembly graphs.
+
+    Run the GUI:
+        xhost +local:
+        apptainer run --bind /tmp/.X11-unix:/tmp/.X11-unix --env DISPLAY=$DISPLAY bandage.sif
+
+    Headless command-line use (no display needed):
+        apptainer run bandage.sif image graph.gfa out.png
+        apptainer run bandage.sif info  graph.gfa
+
+%environment
+    export LC_ALL=C
+    export PATH=/opt/bandage:$PATH
+
+%post
+    export DEBIAN_FRONTEND=noninteractive
+    export TZ=UTC
+
+    apt-get update -y && apt-get install -y --no-install-recommends \
+        build-essential \
+        git \
+        ca-certificates \
+        wget \
+        unzip \
+        qt5-qmake \
+        qtbase5-dev \
+        qtbase5-dev-tools \
+        libqt5svg5-dev \
+        libqt5widgets5 \
+        libqt5gui5 \
+        libqt5core5a \
+        libqt5network5 \
+        libgl1-mesa-glx \
+        libglu1-mesa \
+        libxrender1 \
+        libxext6 \
+        libx11-xcb1 \
+        libxkbcommon-x11-0 \
+        libxcb-icccm4 \
+        libxcb-image0 \
+        libxcb-keysyms1 \
+        libxcb-randr0 \
+        libxcb-render-util0 \
+        libxcb-xinerama0 \
+        libxcb-xkb1 \
+        xdotool \
+        ncbi-blast+ \
+    && rm -rf /var/lib/apt/lists/*
+
+    cd /tmp
+    git clone --depth 1 --branch v0.9.0 https://github.com/rrwick/Bandage.git bandage_src
+    cd bandage_src
+    qmake Bandage.pro
+    make -j$(nproc)
+    mkdir -p /opt/bandage
+    cp Bandage /opt/bandage/Bandage
+    cd /
+    rm -rf /tmp/bandage_src
+
+%runscript
+    #!/bin/bash
+    SUBCMDS="image|info|load|reduce|querypaths"
+
+    if [[ $# -gt 0 ]] && echo "$1" | grep -qiE "^($SUBCMDS)$"; then
+        exec /opt/bandage/Bandage "$@"
+    else
+        if [[ -z "$DISPLAY" ]]; then
+            echo "ERROR: \$DISPLAY is not set. Run with:"
+            echo "  xhost +local:"
+            echo "  apptainer run --bind /tmp/.X11-unix:/tmp/.X11-unix --env DISPLAY=\$DISPLAY bandage.sif"
+            exit 1
+        fi
+
+        export QT_QPA_PLATFORM=xcb
+        export XDG_RUNTIME_DIR=/tmp/runtime-$$
+        mkdir -p "$XDG_RUNTIME_DIR"
+        chmod 700 "$XDG_RUNTIME_DIR"
+
+        /opt/bandage/Bandage "$@" &
+        BPID=$!
+
+        sleep 2
+        xdotool search --pid $BPID --onlyvisible windowfocus
+        xdotool search --pid $BPID --onlyvisible key super+Up 2>/dev/null || \
+        xdotool search --pid $BPID --onlyvisible windowsize 99999 99999 2>/dev/null || true
+
+        wait $BPID
+        rm -rf "$XDG_RUNTIME_DIR"
+    fi
+
+%test
+    test -x /opt/bandage/Bandage && echo "Bandage binary present and executable"
+

@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+module purge
+cd "${HOME}"
+# -----------------------------------------------------------------------
+# Set up VNC / Xfce desktop environment
+# -----------------------------------------------------------------------
+export SEND_256_COLORS_TO_REMOTE=1
+export XDG_CONFIG_HOME="<%= session.staged_root.join("config") %>"
+export XDG_DATA_HOME="<%= session.staged_root.join("share") %>"
+export XDG_CACHE_HOME="$(mktemp -d)"
+export $(dbus-launch)
+xfwm4 --compositor=off --sm-client-disable &
+xsetroot -solid "#D3D3D3"
+xfsettingsd --sm-client-disable &
+xfdesktop --quit 2>/dev/null || true
+# -----------------------------------------------------------------------
+# Load required modules
+# -----------------------------------------------------------------------
+module load gcc apptainer
+echo "=== Environment ==="
+module list
+echo "DISPLAY=${DISPLAY}"
+glxinfo | grep -i render 2>/dev/null || echo "glxinfo not available"
+# -----------------------------------------------------------------------
+# Launch Bandage GUI via Apptainer in the background
+# -----------------------------------------------------------------------
+apptainer exec \
+  --env DISPLAY="${DISPLAY}" \
+  --env XDG_RUNTIME_DIR="/tmp/runtime-$$" \
+  -B /tmp/.X11-unix:/tmp/.X11-unix \
+  -B "${HOME}:${HOME}" \
+  "<%= context.version %>" Bandage &
+BANDAGE_PID=$!
+# Poll until Bandage window appears using wmctrl, then maximize
+echo "Waiting for Bandage window..."
+for i in $(seq 1 30); do
+  sleep 2
+  WIN_ID=$(apptainer exec \
+    --env DISPLAY="${DISPLAY}" \
+    -B /tmp/.X11-unix:/tmp/.X11-unix \
+    "<%= context.version %>" \
+    wmctrl -l 2>/dev/null | grep -i "bandage" | tail -1 | awk '{print $1}')
+  if [ -n "${WIN_ID}" ]; then
+    echo "Bandage window found (ID: ${WIN_ID}), maximizing..."
+    apptainer exec \
+      --env DISPLAY="${DISPLAY}" \
+      -B /tmp/.X11-unix:/tmp/.X11-unix \
+      "<%= context.version %>" \
+      wmctrl -i -r "${WIN_ID}" -b add,maximized_vert,maximized_horz
+    break
+  fi
+  echo "Attempt ${i}/30: waiting for Bandage window..."
+done
+# Keep the session alive until Bandage exits
+wait $BANDAGE_PID
