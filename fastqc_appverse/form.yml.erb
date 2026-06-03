@@ -1,0 +1,50 @@
+---
+form:
+  - cluster
+  - version
+  - account
+  - bc_num_hours
+  - node_type
+  - num_cores
+  - mem_per_cpu
+  - bc_email_on_started
+attributes:
+  cluster:
+    widget: "text_field"
+    label: "Cluster"
+    value: ""
+    help: "Name of the cluster to submit the job to (as configured in OOD)."
+  bc_num_hours:
+    max: 24
+  num_cores:
+    widget: "number_field"
+    label: "Number of cores"
+    value: 1
+    help: |
+      Number of cores to request for the job.
+    min: 1
+    max: 64
+    step: 1
+  mem_per_cpu:
+    widget: "number_field"
+    label: "Memory per core (GB)"
+    value: 4
+    help: "Amount of memory per core in GB."
+    min: 1
+    max: 64
+    step: 1
+  account:
+    label: "Allocation Code"
+    widget: "text_field"
+    help: "Enter your allocation or account code for job submission."
+  node_type:
+    widget: "text_field"
+    label: "Partition"
+    value: ""
+    help: "Scheduler partition to submit the job to."
+  version:
+    widget: select
+    label: "FastQC version"
+    help: "Select the version of FastQC to launch."
+    options:
+      - ["FastQC 0.12.1", "/full/path/to/software/apptainer_images/fastqc/fastqc_0.12.1.sif"]

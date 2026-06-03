@@ -1,0 +1,101 @@
+Bootstrap: docker
+From: ubuntu:22.04
+
+%labels
+    Author          Tannistha Nandi
+    Version         0.12.1
+    Software        FastQC
+    Description     A quality control tool for high throughput sequence data
+    URL             https://www.bioinformatics.babraham.ac.uk/projects/fastqc/
+
+%help
+    FastQC v0.12.1 — Quality control for high-throughput sequencing data.
+    This image runs FastQC in interactive GUI mode.
+
+    Prerequisites on the host:
+        - A running X11 display (DISPLAY must be set)
+        - xhost access granted, e.g.:  xhost +local:
+
+    Launch the GUI:
+
+        apptainer run --env DISPLAY=$DISPLAY fastqc_0.12.1.sif
+
+    Or open specific files directly in the GUI:
+
+        apptainer run --env DISPLAY=$DISPLAY fastqc_0.12.1.sif sample.fastq.gz
+
+    On systems using X11 forwarding (SSH -X / -Y):
+
+        apptainer exec \
+            --env DISPLAY=$DISPLAY \
+            --bind /tmp/.X11-unix \
+            fastqc_0.12.1.sif fastqc
+
+
+%environment
+    export LC_ALL=C
+    export PATH=/opt/FastQC:$PATH
+
+%post
+    # System packages 
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -qq
+    apt-get install -y --no-install-recommends \
+        wget \
+        unzip \
+        openjdk-17-jre \
+        libxrender1 \
+        libxtst6 \
+        libxi6 \
+        libxext6 \
+        libx11-6 \
+        libfontconfig1 \
+        libfreetype6 \
+        fonts-dejavu-core \
+        perl \
+	wmctrl \
+       	xdotool \
+	x11-utils \
+	xterm \
+        ca-certificates
+    apt-get clean
+    rm -rf /var/lib/apt/lists/*
+
+    # Download and install FastQC
+    FASTQC_VERSION="0.12.1"
+    FASTQC_URL="https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v${FASTQC_VERSION}.zip"
+
+    cd /opt
+    wget -q --no-check-certificate "${FASTQC_URL}" -O fastqc.zip
+    unzip -q fastqc.zip
+    rm fastqc.zip
+
+    # Ensure the wrapper script is executable
+    chmod +x /opt/FastQC/fastqc
+
+    # Create a convenience symlink in a standard bin location
+    ln -s /opt/FastQC/fastqc /usr/local/bin/fastqc
+
+%runscript
+    #!/bin/bash
+    # Launch FastQC GUI in the background
+    fastqc "$@" &
+    FASTQC_PID=$!
+
+    # Poll until the FastQC window appears (up to 60 seconds), then maximize
+    for i in $(seq 1 30); do
+        sleep 2
+        WIN_ID=$(xdotool search --name "FastQC" 2>/dev/null | head -1)
+        if [ -n "${WIN_ID}" ]; then
+            echo "FastQC window found (ID: ${WIN_ID}), maximizing..."
+            wmctrl -i -r "${WIN_ID}" -b add,maximized_vert,maximized_horz
+            break
+        fi
+        echo "Attempt ${i}/30: waiting for FastQC window..."
+    done
+
+    # Keep container alive until FastQC exits
+    wait $FASTQC_PID
+
+%test
+    fastqc --version
