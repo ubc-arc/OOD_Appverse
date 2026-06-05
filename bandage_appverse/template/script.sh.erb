@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 module purge
 cd "${HOME}"
+
 # -----------------------------------------------------------------------
 # Set up VNC / Xfce desktop environment
 # -----------------------------------------------------------------------
@@ -13,14 +14,27 @@ xfwm4 --compositor=off --sm-client-disable &
 xsetroot -solid "#D3D3D3"
 xfsettingsd --sm-client-disable &
 xfdesktop --quit 2>/dev/null || true
+
 # -----------------------------------------------------------------------
 # Load required modules
+# Update the module name to match your cluster's module system
 # -----------------------------------------------------------------------
-module load gcc apptainer
+module load apptainer
 echo "=== Environment ==="
 module list
 echo "DISPLAY=${DISPLAY}"
 glxinfo | grep -i render 2>/dev/null || echo "glxinfo not available"
+
+# -----------------------------------------------------------------------
+# Verify the container image exists before launching
+# -----------------------------------------------------------------------
+SIF="<%= context.version %>"
+if [ ! -f "${SIF}" ]; then
+  echo "ERROR: Container image not found: ${SIF}"
+  echo "Please build the container and update the path in form.yml.erb."
+  exit 1
+fi
+
 # -----------------------------------------------------------------------
 # Launch Bandage GUI via Apptainer in the background
 # -----------------------------------------------------------------------
@@ -29,27 +43,36 @@ apptainer exec \
   --env XDG_RUNTIME_DIR="/tmp/runtime-$$" \
   -B /tmp/.X11-unix:/tmp/.X11-unix \
   -B "${HOME}:${HOME}" \
-  "<%= context.version %>" Bandage &
+  "${SIF}" Bandage &
 BANDAGE_PID=$!
-# Poll until Bandage window appears using wmctrl, then maximize
+
+# -----------------------------------------------------------------------
+# Poll until Bandage window appears using xdotool (inside container),
+# then maximize
+# -----------------------------------------------------------------------
 echo "Waiting for Bandage window..."
 for i in $(seq 1 30); do
   sleep 2
+  if ! kill -0 $BANDAGE_PID 2>/dev/null; then
+    echo "ERROR: Bandage process has exited unexpectedly."
+    exit 1
+  fi
   WIN_ID=$(apptainer exec \
     --env DISPLAY="${DISPLAY}" \
     -B /tmp/.X11-unix:/tmp/.X11-unix \
-    "<%= context.version %>" \
-    wmctrl -l 2>/dev/null | grep -i "bandage" | tail -1 | awk '{print $1}')
+    "${SIF}" \
+    xdotool search --name "Bandage" 2>/dev/null | tail -1)
   if [ -n "${WIN_ID}" ]; then
     echo "Bandage window found (ID: ${WIN_ID}), maximizing..."
     apptainer exec \
       --env DISPLAY="${DISPLAY}" \
       -B /tmp/.X11-unix:/tmp/.X11-unix \
-      "<%= context.version %>" \
-      wmctrl -i -r "${WIN_ID}" -b add,maximized_vert,maximized_horz
+      "${SIF}" \
+      xdotool windowsize "${WIN_ID}" 99999 99999
     break
   fi
   echo "Attempt ${i}/30: waiting for Bandage window..."
 done
+
 # Keep the session alive until Bandage exits
 wait $BANDAGE_PID

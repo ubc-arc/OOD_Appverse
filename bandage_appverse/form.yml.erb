@@ -1,47 +1,27 @@
 ---
+# Set cluster to the id matching your /etc/ood/config/clusters.d/<cluster>.yml
+cluster: "mycluster"
 form:
-  - cluster
   - version
-  - account
+  - auto_accounts
   - bc_num_hours
-  - node_type
-  - num_cores
-  - mem_per_cpu
+  - auto_queues
+  - bc_num_slots
+  - bc_vnc_resolution
   - bc_email_on_started
 attributes:
-  cluster:
-    widget: "text_field"
-    label: "Cluster"
-    value: ""
-    help: "Name of the cluster to submit the job to (as configured in OOD)."
   bc_num_hours:
     max: 24
-  num_cores:
-    widget: "number_field"
+    help: "Maximum walltime for the session (hours)."
+  bc_num_slots:
     label: "Number of cores"
     value: 1
-    help: |
-      Number of cores to request for the job.
     min: 1
     max: 64
     step: 1
-  mem_per_cpu:
-    widget: "number_field"
-    label: "Memory per core (GB)"
-    value: 4
-    help: "Amount of memory per core in GB."
-    min: 1
-    max: 64
-    step: 1
-  account:
-    label: "Allocation Code"
-    widget: "text_field"
-    help: "Enter your allocation or account code for job submission."
-  node_type:
-    widget: "text_field"
-    label: "Partition"
-    value: ""
-    help: "Scheduler partition to submit the job to."
+    help: "Number of CPU cores to request."
+  bc_vnc_resolution:
+    required: true
   version:
     widget: select
     label: "Bandage version"

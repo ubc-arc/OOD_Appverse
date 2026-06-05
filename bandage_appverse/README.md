@@ -1,17 +1,18 @@
-# Bandage Apptainer Container
+# Bandage Open OnDemand App
 
-An Apptainer container for running [Bandage 0.9.0](https://github.com/rrwick/Bandage) as a desktop GUI application via Open OnDemand.
+An Open OnDemand app for running [Bandage 0.9.0](https://github.com/rrwick/Bandage) as a desktop GUI application via a VNC session.
 
 Part of the [UBC ARC OOD Appverse](https://github.com/ubc-arc/OOD_Appverse) collection.
 
----
+
 
 ## Prerequisites
 
 - **Apptainer** 1.3.1+
-- **Open OnDemand** for launching the Bandage GUI through the web portal
+- **Open OnDemand** 2.x+
+- A Slurm-based HPC cluster configured with Open OnDemand
 
----
+
 
 ## Container Contents
 
@@ -19,54 +20,57 @@ Part of the [UBC ARC OOD Appverse](https://github.com/ubc-arc/OOD_Appverse) coll
 |-----------|---------|
 | Base OS | Ubuntu 22.04 |
 | Bandage | 0.9.0 |
-| wmctrl / xdotool | system |
+| xdotool | system |
 | BLAST+ | system |
 
----
 
 ## Building the Container
 
-The container must be built on a node with internet access in order to pull the base Ubuntu image and clone the Bandage source from GitHub.
+Build the container on a system with internet access:
+apptainer build bandage.sif bandage.def
 
-Copy the definition file (`bandage.def`) to your working directory, then build:
+## Setup
 
-
-apptainer build bandage.sif /full/path/to/bandage.def
-
-
-Once built, move the container to your shared software directory:
-
-mv bandage.sif /path/to/apptainer_images/bandage/
+1. Move the container to a shared directory accessible from compute nodes:
+mv bandage.sif /path/to/apptainer_images/bandage/bandage.sif
 
 
-Update the `.sif` path in `form.yml.erb` to match your deployment location.
+2. Update `cluster` in `form.yml.erb` to match your cluster id (the filename without `.yml` under `/etc/ood/config/clusters.d/`):
+cluster: "mycluster"
 
----
+
+3. Update the `.sif` path in `form.yml.erb` to point to where you placed the container:
+options:
+  - ["Bandage 0.9.0", "/path/to/apptainer_images/bandage/bandage.sif"]
+
+
+4. Update `module load apptainer` in `script.sh` to match your cluster's module name if different.
+
+
 
 ## Running Bandage via Open OnDemand
 
-Bandage is launched through the Open OnDemand web portal as a graphical desktop application. No command line interaction is required.
-
 1. Log in to your Open OnDemand instance
 2. Navigate to **Interactive Apps** and select the Bandage app
-3. Fill in the job parameters (cluster, number of cores, memory, time, account)
-4. Click **Launch**: a VNC desktop session will start with the Bandage GUI open and maximized
+3. Fill in the job parameters (account, queue, cores, walltime)
+4. Click **Launch** : a VNC desktop session will start with the Bandage GUI open and maximized
 
----
+
 
 ## Troubleshooting
 
 **Out of memory errors:**
-- Request more memory when submitting the job through the Open OnDemand form
-- Increase the number of cores or memory per core for large graphs
+- Increase the number of cores in the job form (memory scales with cores)
 
----
+**Bandage does not launch:**
+- Verify the `.sif` path in `form.yml.erb` is correct and the file exists on the compute node
+
+
 
 ## Contributing
 
 Contributions are welcome. Please open an issue or submit a pull request on [GitHub](https://github.com/ubc-arc/OOD_Appverse).
 
----
 
 ## License
 
