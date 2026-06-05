@@ -1,0 +1,37 @@
+---
+# Set cluster to the id matching your /etc/ood/config/clusters.d/<cluster>.yml
+cluster: "mycluster"
+form:
+  - version
+  - auto_accounts
+  - bc_num_hours
+  - auto_queues
+  - num_cores
+  - mem_per_cpu
+  - bc_email_on_started
+attributes:
+  bc_num_hours:
+    max: 3
+    help: "Maximum walltime for the session (hours)."
+  num_cores:
+    widget: "number_field"
+    label: "Number of cores"
+    value: 1
+    min: 1
+    max: 40
+    step: 1
+    help: "Number of CPU cores to request."
+  mem_per_cpu:
+    widget: "number_field"
+    label: "Memory per core (GB)"
+    value: 4
+    min: 1
+    max: 64
+    step: 1
+    help: "Amount of memory per core in GB."
+  version:
+    widget: select
+    label: "MEGA version"
+    help: "Select the version of MEGA to launch."
+    options:
+      - ["MEGA 12.1.2", "/path/to/apptainer_images/mega/mega12_gui.sif"]

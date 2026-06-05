@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+
+# Clean the environment
+module purge
+cd "${HOME}"
+
+# Set up VNC / Xfce desktop environment
+export SEND_256_COLORS_TO_REMOTE=1
+export XDG_CONFIG_HOME="<%= session.staged_root.join("config") %>"
+export XDG_DATA_HOME="<%= session.staged_root.join("share") %>"
+export XDG_CACHE_HOME="$(mktemp -d)"
+export $(dbus-launch)
+
+xfwm4 --compositor=off --sm-client-disable &
+xsetroot -solid "#D3D3D3"
+xfsettingsd --sm-client-disable &
+xfdesktop --quit 2>/dev/null || true
+
+# Load required modules
+module load apptainer
+
+echo "=== Environment ==="
+module list
+echo "DISPLAY=${DISPLAY}"
+glxinfo | grep -i render 2>/dev/null || echo "glxinfo not available"
+
+# Launch MEGA 12 GUI via Apptainer
+set -x
+
+apptainer run \
+  --env DISPLAY="${DISPLAY}" \
+  -B /tmp/.X11-unix:/tmp/.X11-unix \
+  "<%= context.version %>" &
+
+MEGA_PID=$!
+
+# Maximize MEGA main window using wmctrl (by window ID in hex)
+# xdotool windowmaximize not supported in this version — use wmctrl -i -r
+MAIN_TITLE="Molecular Evolutionary Genetics Analysis"
+MAX_ATTEMPTS=30
+ATTEMPT=0
+MAXIMIZED=0
+SIF="<%= context.version %>"
+
+while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+  sleep 1
+  ATTEMPT=$((ATTEMPT + 1))
+
+  # Get window ID via xdotool search
+  WID=$(apptainer exec \
+    --env DISPLAY="${DISPLAY}" \
+    -B /tmp/.X11-unix:/tmp/.X11-unix \
+    "$SIF" \
+    xdotool search --name "$MAIN_TITLE" 2>/dev/null | head -1)
+
+  if [ -n "$WID" ]; then
+    # Convert decimal WID to hex for wmctrl -i
+    WID_HEX=$(printf '0x%x' "$WID")
+    echo "Found MEGA window ID=$WID (hex=$WID_HEX), maximizing..."
+    apptainer exec \
+      --env DISPLAY="${DISPLAY}" \
+      -B /tmp/.X11-unix:/tmp/.X11-unix \
+      "$SIF" \
+      wmctrl -i -r "$WID_HEX" -b add,maximized_vert,maximized_horz
+    echo "Maximized via wmctrl -i (attempt $ATTEMPT)"
+    MAXIMIZED=1
+    break
+  fi
+
+  echo "Waiting for MEGA main window... (attempt $ATTEMPT/$MAX_ATTEMPTS)"
+done
+
+if [ $MAXIMIZED -eq 0 ]; then
+  echo "Could not maximize. Listing windows:"
+  apptainer exec \
+    --env DISPLAY="${DISPLAY}" \
+    -B /tmp/.X11-unix:/tmp/.X11-unix \
+    "$SIF" \
+    wmctrl -l 2>/dev/null || true
+fi
+
+# Keep session alive until MEGA exits
+wait $MEGA_PID

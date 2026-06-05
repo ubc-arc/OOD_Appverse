@@ -1,0 +1,12 @@
+<%-
+  cores = num_cores.to_i
+  slurm_args = ["--nodes", "1", "--ntasks-per-node", "#{cores}", "--mem-per-cpu", "#{mem_per_cpu}G"]
+-%>
+---
+batch_connect:
+  template: "vnc"
+script:
+  native:
+  <%- slurm_args.each do |arg| %>
+  - "<%= arg %>"
+  <%- end %>
