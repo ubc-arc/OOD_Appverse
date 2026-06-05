@@ -1,13 +1,11 @@
 <%-
   cores = num_cores.to_i
-  slurm_args = ["--nodes", "1", "--ntasks-per-node", "#{cores}", "--mem-per-cpu", "#{mem_per_cpu}G", "--partition", "#{node_type}"]
+  slurm_args = ["--nodes", "1", "--ntasks-per-node", "#{cores}", "--mem-per-cpu", "4G"]
 -%>
 ---
 batch_connect:
   template: "vnc"
 script:
-  accounting_id: "<%= account %>"
-  queue_name: <%= node_type %>
   native:
   <%- slurm_args.each do |arg| %>
   - "<%= arg %>"

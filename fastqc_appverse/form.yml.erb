@@ -1,47 +1,25 @@
 ---
+cluster: "mycluster"
 form:
-  - cluster
   - version
-  - account
+  - auto_accounts
   - bc_num_hours
-  - node_type
+  - auto_queues
   - num_cores
-  - mem_per_cpu
   - bc_email_on_started
 attributes:
-  cluster:
-    widget: "text_field"
-    label: "Cluster"
-    value: ""
-    help: "Name of the cluster to submit the job to (as configured in OOD)."
   bc_num_hours:
     max: 24
+    help: "Maximum walltime for the session (hours)."
   num_cores:
     widget: "number_field"
     label: "Number of cores"
     value: 1
     help: |
-      Number of cores to request for the job.
+      Number of cores to request for the job (4 GB per core unless requesting whole node).
     min: 1
     max: 64
     step: 1
-  mem_per_cpu:
-    widget: "number_field"
-    label: "Memory per core (GB)"
-    value: 4
-    help: "Amount of memory per core in GB."
-    min: 1
-    max: 64
-    step: 1
-  account:
-    label: "Allocation Code"
-    widget: "text_field"
-    help: "Enter your allocation or account code for job submission."
-  node_type:
-    widget: "text_field"
-    label: "Partition"
-    value: ""
-    help: "Scheduler partition to submit the job to."
   version:
     widget: select
     label: "FastQC version"
