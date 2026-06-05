@@ -1,0 +1,280 @@
+Bootstrap: docker
+From: ubuntu:22.04
+
+%labels
+    Author          Tannistha Nandi
+    Version         53.1
+    Software        UGENE
+    Description     Unified Bioinformatics Environment with NGS tools
+    URL             https://ugene.net
+    Bundled_Tools   BWA, Bowtie1, Bowtie2, SAMtools, BCFtools, Tabix, BEDtools, MAFFT, ClustalW, ClustalOmega, Kalign, HMMER3, CAP3, SPAdes, BLAST+, Cufflinks, TopHat2, StringTie, FastQC, FastTree, IQ-TREE, MrBayes, PhyML, Kraken2, Cutadapt, mfold, Spidey, SnpEff
+
+%help
+    UGENE v53.1 — Unified Bioinformatics Environment.
+    This image runs UGENE in interactive GUI mode.
+
+    Prerequisites on the host:
+        - A running X11 display (DISPLAY must be set)
+        - xhost access granted, e.g.:  xhost +local:
+
+    Launch the GUI:
+        apptainer exec \
+            --env DISPLAY=$DISPLAY \
+            -B /tmp/.X11-unix:/tmp/.X11-unix \
+            ugene_53.1.sif ugeneui
+
+    Build:
+        apptainer build ugene_53.1.sif ugene_53.1.def
+
+    Bundled Tools (all pre-configured, no manual setup needed):
+        BWA, Bowtie1, Bowtie2        Read mapping
+        SAMtools, BCFtools, Tabix    SAM/BAM/VCF processing
+        BEDtools                     Genome arithmetic
+        MAFFT, ClustalW, ClustalO   Multiple sequence alignment
+        Kalign, HMMER3, CAP3        Alignment and assembly
+        SPAdes                       De novo assembly
+        BLAST+                       Sequence search
+        Cufflinks, TopHat2          RNA-seq analysis
+        StringTie                    Transcript assembly
+        FastQC                       Quality control
+        FastTree, IQ-TREE, MrBayes  Phylogenetics
+        PhyML, Kraken2              Phylogenetics and metagenomics
+        Cutadapt                     Adapter trimming
+        mfold, Spidey, SnpEff       RNA folding, alignment, annotation
+
+    Note — HMM2, CircularView and ORF Marker are built directly into UGENE,
+    no external binary needed.
+
+    Register external tools in UGENE via:
+        Settings -> Preferences -> External Tools
+
+%environment
+    export LC_ALL=C
+    export PATH=/opt/ugene:/opt/ugene/tools/bwa:/opt/ugene/tools/samtools:/opt/ugene/tools/bowtie2:/opt/ugene/tools/blast:/opt/ugene/tools/python3/bin:/opt/ugene/tools/java8/bin:$PATH
+    export QT_X11_NO_MITSHM=1
+    export QT_QPA_PLATFORM=xcb
+    export JAVA_HOME=/opt/ugene/tools/java8
+    export XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-/tmp/runtime-$(id -u)}
+
+%post
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -qq
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        curl \
+        tar \
+        wmctrl \
+        xdotool \
+        x11-utils \
+        libgl1 \
+        libglib2.0-0 \
+        libx11-6 \
+        libxext6 \
+        libxrender1 \
+        libxi6 \
+        libxrandr2 \
+        libxcursor1 \
+        libxcomposite1 \
+        libxdamage1 \
+        libxfixes3 \
+        libxinerama1 \
+        libxkbcommon0 \
+        libxkbcommon-x11-0 \
+        libfontconfig1 \
+        libfreetype6 \
+        libdbus-1-3 \
+        libasound2 \
+        libpulse0 \
+        libpulse-mainloop-glib0 \
+        libgtk-3-0 \
+        libcups2 \
+        libssl3 \
+        zlib1g \
+        libxcb1 \
+        libxcb-glx0 \
+        libxcb-icccm4 \
+        libxcb-image0 \
+        libxcb-keysyms1 \
+        libxcb-randr0 \
+        libxcb-render0 \
+        libxcb-render-util0 \
+        libxcb-shape0 \
+        libxcb-shm0 \
+        libxcb-sync1 \
+        libxcb-util1 \
+        libxcb-xfixes0 \
+        libxcb-xinerama0 \
+        libxcb-xkb1 \
+        libxcb-cursor0 \
+        libx11-xcb1 \
+        libglu1-mesa \
+        libegl1 \
+        libgles2 \
+        perl \
+        falkon \
+        xdg-utils \
+        dbus-x11 \
+        libqt5webenginewidgets5 \
+        libqt5webengine5 \
+        libqt5webenginecore5
+    apt-get clean
+    rm -rf /var/lib/apt/lists/*
+
+    UGENE_VERSION="53.1"
+    UGENE_URL="https://github.com/ugeneunipro/ugene/releases/download/${UGENE_VERSION}/ugene-${UGENE_VERSION}-linux-x86-64.tar.gz"
+    cd /opt
+    curl -fSL "${UGENE_URL}" -o ugene.tar.gz
+    tar -xzf ugene.tar.gz
+    mv ugene-${UGENE_VERSION} ugene
+    rm ugene.tar.gz
+    chmod +x /opt/ugene/ugeneui
+    ln -s /opt/ugene/ugeneui /usr/local/bin/ugeneui
+
+    # Pre-configure external tool paths so UGENE finds them automatically
+    mkdir -p /opt/ugene/etc
+    cat > /opt/ugene/etc/ugene.ini << 'EOF'
+[UGENE]
+firstRun=0
+
+[ExternalTools]
+bwa=/opt/ugene/tools/bwa/bwa
+bowtie=/opt/ugene/tools/bowtie1/bowtie
+bowtie-build=/opt/ugene/tools/bowtie1/bowtie-build
+bowtie2=/opt/ugene/tools/bowtie2/bowtie2
+bowtie2-align-l=/opt/ugene/tools/bowtie2/bowtie2-align-l
+bowtie2-align-s=/opt/ugene/tools/bowtie2/bowtie2-align-s
+bowtie2-build=/opt/ugene/tools/bowtie2/bowtie2-build
+samtools=/opt/ugene/tools/samtools/samtools
+bcftools=/opt/ugene/tools/samtools/bcftools
+tabix=/opt/ugene/tools/samtools/tabix
+bedtools=/opt/ugene/tools/bedtools/bedtools
+mafft=/opt/ugene/tools/mafft/mafft.bat
+clustalw=/opt/ugene/tools/clustalw/clustalw2
+clustalo=/opt/ugene/tools/clustalo/clustalo
+kalign=/opt/ugene/tools/kalign/kalign
+hmmbuild=/opt/ugene/tools/hmmer3/hmmbuild
+hmmsearch=/opt/ugene/tools/hmmer3/hmmsearch
+cap3=/opt/ugene/tools/cap3/cap3
+spades=/opt/ugene/tools/spades/bin/spades.py
+python3=/opt/ugene/tools/python3/bin/python3.12
+java=/opt/ugene/tools/java8/bin/java
+blast=/opt/ugene/tools/blast/blastn
+makeblastdb=/opt/ugene/tools/blast/makeblastdb
+blastdbcmd=/opt/ugene/tools/blast/blastdbcmd
+blastp=/opt/ugene/tools/blast/blastp
+blastx=/opt/ugene/tools/blast/blastx
+tblastn=/opt/ugene/tools/blast/tblastn
+tblastx=/opt/ugene/tools/blast/tblastx
+rpsblast=/opt/ugene/tools/blast/rpsblast
+cufflinks=/opt/ugene/tools/cufflinks/cufflinks
+cuffdiff=/opt/ugene/tools/cufflinks/cuffdiff
+cuffmerge=/opt/ugene/tools/cufflinks/cuffmerge
+tophat2=/opt/ugene/tools/tophat2/tophat2
+stringtie=/opt/ugene/tools/stringtie/stringtie
+fastqc=/opt/ugene/tools/fastqc/fastqc
+fasttree=/opt/ugene/tools/fasttree/FastTree
+iqtree=/opt/ugene/tools/iqtree/iqtree
+mrbayes=/opt/ugene/tools/mrbayes/mb
+phyml=/opt/ugene/tools/phyml/phyml
+spidey=/opt/ugene/tools/spidey/spidey
+mfold=/opt/ugene/tools/mfold/mfold.sh
+kraken2=/opt/ugene/tools/kraken2/kraken2
+cutadapt=/opt/ugene/tools/python3/bin/cutadapt
+EOF
+
+    # Write a launcher script that copies the ini to the user's UGENE config
+    # directory on first run if not already present
+    cat > /usr/local/bin/ugene-launcher << 'LAUNCHER'
+#!/bin/bash
+UGENE_CFG_DIR="${HOME}/.config/Unipro/UGENE"
+UGENE_INI="${UGENE_CFG_DIR}/ugene.ini"
+UGENE_SAMPLES="${HOME}/ugene_samples"
+mkdir -p "${UGENE_CFG_DIR}"
+
+# Always copy pre-configured ini from container — ensures tool paths are correct
+cp /opt/ugene/etc/ugene.ini "${UGENE_INI}"
+echo "Pre-configured external tools written to ${UGENE_INI}"
+
+# Set default browser for HTML files
+export BROWSER=falkon
+xdg-mime default falkon.desktop text/html 2>/dev/null || true
+xdg-mime default falkon.desktop x-scheme-handler/http 2>/dev/null || true
+xdg-mime default falkon.desktop x-scheme-handler/https 2>/dev/null || true
+
+# Create xdg-open wrapper that forces epiphany for HTML files
+mkdir -p "${HOME}/.local/bin"
+cat > "${HOME}/.local/bin/xdg-open" << 'XDGOPEN'
+#!/bin/bash
+case "$1" in
+    *.html|*.htm|file://*.html|file://*.htm)
+        falkon --no-sandbox "$1" &
+        ;;
+    http://*|https://*)
+        falkon --no-sandbox "$1" &
+        ;;
+    *)
+        /usr/bin/xdg-open "$1"
+        ;;
+esac
+XDGOPEN
+chmod +x "${HOME}/.local/bin/xdg-open"
+export PATH="${HOME}/.local/bin:${PATH}"
+
+# Copy sample data to writable home directory on first run
+if [ ! -d "${UGENE_SAMPLES}" ]; then
+    echo "Copying UGENE sample data to ${UGENE_SAMPLES}..."
+    cp -r /opt/ugene/data/samples "${UGENE_SAMPLES}"
+    echo "Sample data ready at ${UGENE_SAMPLES}"
+fi
+
+/opt/ugene/ugeneui "$@"
+LAUNCHER
+    chmod +x /usr/local/bin/ugene-launcher
+    # Remove conflicting ugeneui symlink and point it to the launcher
+    rm -f /usr/local/bin/ugeneui
+    ln -s /usr/local/bin/ugene-launcher /usr/local/bin/ugeneui
+
+%runscript
+    #!/bin/bash
+    # Launch UGENE GUI in the background
+    /usr/local/bin/ugene-launcher "$@" &
+    UGENE_PID=$!
+
+    # Poll until the UGENE main window appears, then wait for it to fully load
+    for i in $(seq 1 30); do
+        sleep 2
+        WIN_ID=$(xdotool search --onlyvisible --name "UGENE" 2>/dev/null | head -1)
+        if [ -n "${WIN_ID}" ]; then
+            echo "UGENE window found (ID: ${WIN_ID}), waiting for main window..."
+            sleep 5
+            WIN_ID=$(xdotool search --onlyvisible --name "UGENE" 2>/dev/null | tail -1)
+            echo "Maximizing window (ID: ${WIN_ID})..."
+            wmctrl -i -r "${WIN_ID}" -b add,maximized_vert,maximized_horz
+            break
+        fi
+        echo "Attempt ${i}/30: waiting for UGENE window..."
+    done
+
+    # Keep container alive until UGENE exits
+    wait $UGENE_PID
+
+%test
+    test -x /opt/ugene/ugeneui                   && echo "UGENE binary: OK"
+    test -x /opt/ugene/tools/bwa/bwa             && echo "BWA: OK"
+    test -x /opt/ugene/tools/bowtie2/bowtie2     && echo "Bowtie2: OK"
+    test -x /opt/ugene/tools/samtools/samtools   && echo "SAMtools: OK"
+    test -x /opt/ugene/tools/cap3/cap3           && echo "CAP3: OK"
+    test -x /opt/ugene/tools/spades/bin/spades.py && echo "SPAdes: OK"
+    test -x /opt/ugene/tools/hmmer3/hmmbuild     && echo "HMMER3: OK"
+    test -x /opt/ugene/tools/kalign/kalign       && echo "Kalign: OK"
+    test -x /opt/ugene/tools/blast/blastn        && echo "BLAST+: OK"
+    test -x /opt/ugene/tools/fastqc/fastqc       && echo "FastQC: OK"
+    test -x /opt/ugene/tools/mafft/mafftdir/bin/mafft && echo "MAFFT: OK"
+    test -x /opt/ugene/tools/clustalw/clustalw2  && echo "ClustalW: OK"
+    test -x /opt/ugene/tools/clustalo/clustalo   && echo "ClustalOmega: OK"
+    test -x /opt/ugene/tools/iqtree/iqtree       && echo "IQ-TREE: OK"
+    test -x /opt/ugene/tools/mrbayes/mb          && echo "MrBayes: OK"
+    test -x /opt/ugene/tools/stringtie/stringtie && echo "StringTie: OK"
+    test -x /opt/ugene/tools/kraken2/kraken2     && echo "Kraken2: OK"
+    test -f /opt/ugene/etc/ugene.ini             && echo "Pre-configured ini: OK"
+
