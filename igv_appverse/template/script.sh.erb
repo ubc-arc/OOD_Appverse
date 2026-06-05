@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+module purge
+# Clean the environment
+cd "${HOME}"
+
+#
+# Launch Xfce Window Manager and Panel
+#
+  export SEND_256_COLORS_TO_REMOTE=1
+  export XDG_CONFIG_HOME="<%= session.staged_root.join("config") %>"
+  export XDG_DATA_HOME="<%= session.staged_root.join("share") %>"
+  export XDG_CACHE_HOME="$(mktemp -d)"
+  export $(dbus-launch)
+
+  xfwm4 --compositor=off --sm-client-disable &
+  # xfwm4 --compositor=off --daemon --sm-client-disable
+  xsetroot -solid "#D3D3D3"
+  xfsettingsd --sm-client-disable &
+  #xfce4-panel --sm-client-disable &
+  xfdesktop --quit 2>/dev/null || true
+
+
+#
+# Start IGV
+#
+
+# Load the required environment
+module load apptainer
+
+# Output debug info
+module list
+
+glxinfo |grep -i render
+
+# Launch ParaView
+set -x
+echo $DISPLAY
+apptainer exec /arc/software/apptainer_images/igv/igv.sif igv.sh --genomeServerURL=/arc/software/apptainer_images/igv/genomes.tsv

@@ -1,0 +1,12 @@
+<%-
+  cores = bc_num_slots.blank? ? 1 : bc_num_slots.to_i
+  slurm_args = ["--nodes", "1", "--ntasks-per-node", "#{cores}", "--mem-per-cpu", "4G"]
+-%>
+---
+batch_connect:
+  template: "vnc"
+script:
+  native:
+  <%- slurm_args.each do |arg| %>
+  - "<%= arg %>"
+  <%- end %>

@@ -1,0 +1,27 @@
+---
+# Set cluster to the id matching your /etc/ood/config/clusters.d/<cluster>.yml
+cluster: "mycluster"
+form:
+  - version
+  - auto_accounts
+  - bc_num_hours
+  - auto_queues
+  - bc_num_slots
+  - bc_email_on_started
+attributes:
+  bc_num_hours:
+    max: 3
+    help: "Maximum walltime for the session (hours)."
+  bc_num_slots:
+    label: "Number of cores"
+    value: 1
+    min: 1
+    max: 40
+    step: 1
+    help: "Number of CPU cores to request."
+  version:
+    widget: select
+    label: "IGV version"
+    help: "Select the version of IGV to launch."
+    options:
+      - ["IGV 2.17.0", "/path/to/apptainer_images/igv/igv.sif"]
