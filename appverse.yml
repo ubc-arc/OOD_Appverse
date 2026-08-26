@@ -1,0 +1,102 @@
+# appverse.yml — Monorepo manifest for the OOD Appverse catalog.
+#
+# This file declares a Monorepo: a source repo that produces one or more
+# Appverse apps. The catalog reads these top-level keys to build the
+# Monorepo detail page. Each entry in `apps:` declares one app:
+#   - path: <subpath>          (required) — the directory containing manifest.yml
+#     software: <name>          (required for multi-app repos) — must match
+#                                 an existing Software entry in the Appverse catalog
+#                                 (case-insensitive title match)
+#
+# Two kinds of tags, do not confuse them:
+#   • top-level `tags:`              — the Monorepo's DISCOVERY tags (shared,
+#                                       site-wide tag vocabulary). Describe the repo
+#                                       for catalog browsing. Not applied to the apps.
+#   • per-app `implementation_tags:` — how an app RUNS (the implementation-tags
+#                                       vocabulary). Declared per app, below.
+#
+# See https://openondemand.connectci.org/appverse-contributor-documentation
+# for the full schema.
+
+appverse:
+  min_version: "1.0"
+
+title: UBC ARC OOD Appverse
+description: A collection of Open OnDemand interactive apps for genomics and bioinformatics, maintained by UBC ARC.
+website: https://github.com/ubc-arc/OOD_Appverse
+docs: https://github.com/ubc-arc/OOD_Appverse
+
+maintainer:
+  name: UBC ARC
+  support_url: https://github.com/ubc-arc/OOD_Appverse/issues
+
+# Discovery tags for the Monorepo itself (shared site-wide `tags` vocabulary).
+# Match-only: tags that aren't already in the vocabulary are dropped and flagged
+# for a reviewer — they are not created from here.
+tags:
+  - bioinformatics
+  - genomics
+  - visualization
+
+apps:
+  - path: igv_appverse
+    software: IGV
+    name: IGV (Integrative Genomics Viewer)
+    description: Launches IGV 2.17.0 as an interactive VNC desktop session for visualizing genomic data including read alignments, variants, and gene annotations.
+    app_type: Batch Connect
+    maintainer:
+      name: UBC ARC
+      support_url: https://github.com/ubc-arc/OOD_Appverse/issues
+    # This app's implementation tags (how it runs). Per-app key is
+    # `implementation_tags`, distinct from the repo's discovery `tags` above.
+    implementation_tags:
+      - Batch Connect
+      - Apptainer
+
+  - path: bandage_appverse
+    software: Bandage
+    name: Bandage (Assembly Graph Viewer)
+    description: Launches Bandage 0.9.0 as an interactive VNC desktop session for visualizing genome assembly graphs.
+    app_type: Batch Connect
+    maintainer:
+      name: UBC ARC
+      support_url: https://github.com/ubc-arc/OOD_Appverse/issues
+    implementation_tags:
+      - Batch Connect
+      - Apptainer
+
+  - path: fastqc_appverse
+    software: FastQC
+    name: FastQC
+    description: Launches FastQC as an interactive VNC desktop session for quality control of sequencing data.
+    app_type: Batch Connect
+    maintainer:
+      name: UBC ARC
+      support_url: https://github.com/ubc-arc/OOD_Appverse/issues
+    implementation_tags:
+      - Batch Connect
+      - Apptainer
+
+  - path: mega_appverse
+    software: MEGA
+    name: MEGA (Molecular Evolutionary Genetics Analysis)
+    description: Launches MEGA as an interactive VNC desktop session for molecular evolutionary genetics analysis.
+    app_type: Batch Connect
+    maintainer:
+      name: UBC ARC
+      support_url: https://github.com/ubc-arc/OOD_Appverse/issues
+    implementation_tags:
+      - Batch Connect
+      - Apptainer
+
+  - path: ugene_appverse
+    software: UGENE
+    name: UGENE
+    description: Launches UGENE as an interactive VNC desktop session for bioinformatics data analysis.
+    app_type: Batch Connect
+    maintainer:
+      name: UBC ARC
+      support_url: https://github.com/ubc-arc/OOD_Appverse/issues
+    implementation_tags:
+      - Batch Connect
+      - Apptainer
