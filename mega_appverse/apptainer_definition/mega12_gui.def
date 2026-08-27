@@ -1,0 +1,192 @@
+# =============================================================================
+# Apptainer Definition File for MEGA 12 GUI
+# megasoftware.net
+#
+# BUILD (requires sudo):
+#   sudo apptainer build mega12_gui.sif /full/path/to/mega12_gui.def
+#
+# RUN GUI:
+#   apptainer run --env DISPLAY=$DISPLAY mega12_gui.sif
+#
+# With X socket (if DISPLAY alone is not enough):
+#   apptainer run --env DISPLAY=$DISPLAY -B /tmp/.X11-unix:/tmp/.X11-unix mega12_gui.sif
+# =============================================================================
+
+Bootstrap: docker
+From: ubuntu:22.04
+
+%labels
+    Software    "MEGA 12.1.2 — Molecular Evolutionary Genetics Analysis"
+    URL         "https://www.megasoftware.net"
+    Base        "Ubuntu 22.04 LTS"
+
+%help
+    MEGA 12 GUI — Apptainer container
+
+    Build:
+      sudo apptainer build mega12_gui.sif /full/path/to/mega12_gui.def
+
+    Run the GUI:
+      apptainer run --env DISPLAY=$DISPLAY mega12_gui.sif
+
+    Run with X socket bound:
+      apptainer run --env DISPLAY=$DISPLAY -B /tmp/.X11-unix:/tmp/.X11-unix mega12_gui.sif
+
+    Run with data directory:
+      apptainer run --env DISPLAY=$DISPLAY -B /path/to/data:/data mega12_gui.sif
+
+    Run MEGA command-line core (megacc):
+      apptainer exec mega12_gui.sif megacc -a opts.mao -d seqs.meg -o results/
+
+    Open a shell:
+      apptainer shell --env DISPLAY=$DISPLAY mega12_gui.sif
+
+%files
+    mega.deb /mega.deb
+
+%post
+    export DEBIAN_FRONTEND=noninteractive
+    export TZ=Etc/UTC
+
+    if [ ! -f /mega.deb ]; then
+        echo "ERROR: /mega.deb not found."
+        exit 1
+    fi
+
+    # -----------------------------------------------------------------------
+    # Install runtime dependencies
+    #
+    # Previously confirmed missing from libcef.so ldd output:
+    #   libgbm1          libgbm.so.1       GPU buffer manager (CEF/Chromium)
+    #   libxkbcommon0    libxkbcommon.so.0 Keyboard handling (CEF/Chromium)
+    # -----------------------------------------------------------------------
+    apt-get update -y
+    apt-get install -y --no-install-recommends \
+        libgtk2.0-0 \
+        libgl1 \
+        libglu1-mesa \
+        libxrender1 \
+        libxext6 \
+        libxft2 \
+        libfontconfig1 \
+        libgdk-pixbuf2.0-0 \
+        libcairo2 \
+        libpango-1.0-0 \
+        libpangocairo-1.0-0 \
+        libpangoft2-1.0-0 \
+        libatk1.0-0 \
+        libatk-bridge2.0-0 \
+        libatspi2.0-0 \
+        libxss1 \
+        libxtst6 \
+        xauth \
+        libgbm1 \
+        libxkbcommon0 \
+        libdrm2 \
+        libegl1 \
+        libopengl0 \
+        libglx0 \
+        libnss3 \
+        libnspr4 \
+        libx11-xcb1 \
+        libxcomposite1 \
+        libxcursor1 \
+        libxdamage1 \
+        libxfixes3 \
+        libxi6 \
+        libxrandr2 \
+        libxinerama1 \
+        libasound2 \
+        libdbus-glib-1-2 \
+        dbus \
+        dbus-x11 \
+        libexpat1 \
+        libwayland-client0 \
+        libwayland-egl1 \
+        libgomp1 \
+        libglib2.0-0 \
+        desktop-file-utils \
+        wmctrl \
+        xdotool \
+	adwaita-icon-theme \
+        fonts-dejavu-core \
+        ca-certificates \
+        binutils
+
+    # Install MEGA
+    echo ""
+    echo "========================================================"
+    echo " Installing MEGA 12.1.2 ..."
+    echo "========================================================"
+    dpkg -i /mega.deb || true
+    apt-get install -f -y
+    rm -f /mega.deb
+
+    if ! dpkg -s mega >/dev/null 2>&1; then
+        echo "ERROR: MEGA package not configured."
+        exit 1
+    fi
+    echo "MEGA status: $(dpkg -s mega | grep ^Status)"
+
+    # Register /usr/lib/mega in ldconfig so libcef.so finds its siblings
+    # (libvulkan.so.1, libEGL.so, libGLESv2.so, libvk_swiftshader.so, etc.)
+    echo "/usr/lib/mega" > /etc/ld.so.conf.d/mega.conf
+    ldconfig
+    echo "ldconfig updated — /usr/lib/mega registered."
+
+    # Verify no missing dependencies remain
+    echo ""
+    echo "========================================================"
+    echo " Verifying libcef.so dependencies:"
+    echo "========================================================"
+    ldd /usr/lib/mega/libcef.so 2>/dev/null | grep "not found" && \
+        echo "WARNING: some deps still missing (see above)" || \
+        echo "All libcef.so dependencies resolved OK."
+
+    echo ""
+    echo "========================================================"
+    echo " Verifying MEGA binary dependencies:"
+    echo "========================================================"
+    ldd /usr/bin/mega 2>/dev/null | grep "not found" && \
+        echo "WARNING: some deps still missing (see above)" || \
+        echo "All MEGA binary dependencies resolved OK."
+
+    apt-get clean
+    rm -rf /var/lib/apt/lists/*
+
+    echo ""
+    echo "========================================================"
+    echo " Build complete"
+    echo "========================================================"
+
+%environment
+    export LANG=C.UTF-8
+    export LC_ALL=C.UTF-8
+    # Adwaita light theme — avoids GTK2 dark-theme artefacts (MEGA FAQ)
+    export GTK2_RC_FILES=/usr/share/themes/Adwaita/gtk-2.0/gtkrc
+    export PATH=/usr/lib/mega:/usr/local/bin:/usr/bin:$PATH
+
+%runscript
+    # Use the official MEGA launch script which sets up the correct working
+    # directory and library paths for CEF before starting the GUI binary.
+    exec /usr/lib/mega/runmega.sh "$@"
+
+%test
+    echo "=== MEGA container self-test ==="
+    echo "glibc (need >= 2.34):"
+    ldd --version | head -1
+    echo "libgbm:"
+    ldconfig -p | grep "libgbm" | head -2
+    echo "libxkbcommon:"
+    ldconfig -p | grep "libxkbcommon" | head -2
+    echo "libcef.so:"
+    ls -lh /usr/lib/mega/libcef.so
+    echo "libcef.so missing deps:"
+    ldd /usr/lib/mega/libcef.so 2>/dev/null | grep "not found" || echo "  none — all resolved"
+    echo "MEGA binary missing deps:"
+    ldd /usr/bin/mega 2>/dev/null | grep "not found" || echo "  none — all resolved"
+    echo "MEGA package:"
+    dpkg -s mega 2>/dev/null | grep -E "^(Package|Version|Status)"
+    echo "runmega.sh:"
+    ls -lh /usr/lib/mega/runmega.sh
+    echo "=== Test complete ==="

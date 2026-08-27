@@ -1,0 +1,60 @@
+Bootstrap: docker
+From: ubuntu:22.04
+
+%labels
+    Author Tannistha Nandi
+    App IGV
+    Description Integrative Genomics Viewer (IGV) Desktop in Apptainer
+
+%environment
+    export LC_ALL=C
+    export LANG=C
+    export IGV_HOME=/opt/igv
+    export PATH=$IGV_HOME:$PATH
+
+%post
+    apt-get update && apt-get install -y \
+        wget \
+        unzip \
+        ca-certificates \
+        libxext6 \
+        libxrender1 \
+        libxtst6 \
+        libxi6 \
+        libx11-6 \
+        libfreetype6 \
+        libfontconfig1 \
+        xauth \
+        && rm -rf /var/lib/apt/lists/*
+
+    mkdir -p /opt
+    cd /opt
+
+    # Download IGV with bundled Java (no separate JRE needed)
+    wget -q https://data.broadinstitute.org/igv/projects/downloads/2.17/IGV_Linux_2.17.0_WithJava.zip
+    unzip IGV_Linux_2.17.0_WithJava.zip
+    mv IGV_Linux_2.17.0 igv
+    rm IGV_Linux_2.17.0_WithJava.zip
+    chmod +x /opt/igv/igv.sh
+
+%runscript
+    exec env JAVA_TOOL_OPTIONS="-Xms512m -Xmx4g" /opt/igv/igv.sh "$@"
+
+%help
+    IGV Desktop (Integrative Genomics Viewer) container.
+
+    Run with X11 forwarding:
+        apptainer run \
+            --bind /tmp/.X11-unix \
+            igv.sif
+
+    On HPC (SSH with X forwarding):
+        ssh -X user_cwl@sockeye.arc.ubc.ca
+        apptainer run igv.sif
+
+    To allocate more memory:
+        apptainer run --env JAVA_TOOL_OPTIONS="-Xmx8g" igv.sif
+
+    Note: If you encounter display permission errors, run the following
+    on the host before launching the container:
+        xauth merge ~/.Xauthority
