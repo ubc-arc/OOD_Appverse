@@ -2,7 +2,7 @@
 name: Bandage (Assembly Graph Viewer)
 category: Interactive Apps
 subcategory: Genomics
-role: batch_connect
+role: batch-connect-VNC
 description: "This app will launch a [Bandage] GUI on a compute node. You will
   be able to interact with the Bandage GUI through a VNC session. [Bandage]:
   https://github.com/rrwick/Bandage"

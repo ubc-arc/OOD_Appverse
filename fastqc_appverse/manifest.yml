@@ -2,7 +2,7 @@
 name: FastQC (Quality Control for High Throughput Sequence Data)
 category: Interactive Apps
 subcategory: Genomics
-role: batch_connect
+role: batch-connect-VNC
 description: "This app will launch a [FastQC] GUI on a compute node. You
   will be able to interact with the FastQC GUI through a VNC session.[FastQC]:
   https://www.bioinformatics.babraham.ac.uk/projects/fastqc/"

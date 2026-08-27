@@ -33,7 +33,7 @@ module list
 
 glxinfo |grep -i render
 
-# Launch ParaView
+# Launch IGV
 set -x
 echo $DISPLAY
-apptainer exec /arc/software/apptainer_images/igv/igv.sif igv.sh --genomeServerURL=/arc/software/apptainer_images/igv/genomes.tsv
+apptainer exec /path/to/apptainer_images/igv/igv.sif igv.sh --genomeServerURL=/path/to/apptainer_images/igv/genomes.tsv
