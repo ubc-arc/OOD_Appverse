@@ -3,8 +3,8 @@ name: IGV (Integrative Genomics Viewer)
 category: Interactive Apps
 subcategory: Genomics
 role: batch_connect
-description: "This app will launch a [IGV] GUI on a compute node.\r\nYou will
-  be able to interact with the IGV GUI through a VNC\r\nsession.\r\n\r\n[IGV]:
-  https://www.igv.org\r\n"
+description: "This app will launch a [IGV] GUI on a compute node.You will
+  be able to interact with the IGV GUI through a VNC session.[IGV]:
+  https://www.igv.org\"
 icon: ''
 ---
