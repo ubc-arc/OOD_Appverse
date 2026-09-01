@@ -1,39 +1,39 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
-module purge
 # Clean the environment
+module purge
 cd "${HOME}"
 
 #
-# Launch Xfce Window Manager and Panel
+# Launch Xfce Window Manager
 #
-  export SEND_256_COLORS_TO_REMOTE=1
-  export XDG_CONFIG_HOME="<%= session.staged_root.join("config") %>"
-  export XDG_DATA_HOME="<%= session.staged_root.join("share") %>"
-  export XDG_CACHE_HOME="$(mktemp -d)"
-  export $(dbus-launch)
+export SEND_256_COLORS_TO_REMOTE=1
+export XDG_CONFIG_HOME="<%= session.staged_root.join("config") %>"
+export XDG_DATA_HOME="<%= session.staged_root.join("share") %>"
+export XDG_CACHE_HOME="$(mktemp -d)"
+export $(dbus-launch)
 
-  xfwm4 --compositor=off --sm-client-disable &
-  # xfwm4 --compositor=off --daemon --sm-client-disable
-  xsetroot -solid "#D3D3D3"
-  xfsettingsd --sm-client-disable &
-  #xfce4-panel --sm-client-disable &
-  xfdesktop --quit 2>/dev/null || true
-
+xfwm4 --compositor=off --sm-client-disable &
+xsetroot -solid "#D3D3D3"
+xfsettingsd --sm-client-disable &
+xfdesktop --quit 2>/dev/null || true
 
 #
 # Start IGV
 #
 
 # Load the required environment
-module load apptainer
+# Update the module name below to match your cluster's module system
+module load gcc apptainer || { echo "ERROR: Failed to load modules gcc apptainer"; exit 1; }
 
 # Output debug info
 module list
+glxinfo | grep -i render || true
 
-glxinfo |grep -i render
-
-# Launch IGV
-set -x
 echo $DISPLAY
-apptainer exec /path/to/apptainer_images/igv/igv.sif igv.sh --genomeServerURL=/path/to/apptainer_images/igv/genomes.tsv
+
+# Launch IGV using the container path selected in the form
+# Update --genomeServerURL to point to your local genomes.tsv file
+apptainer exec "<%= context.version %>" igv.sh \
+  --genomeServerURL=/path/to/apptainer_images/igv/genomes.tsv

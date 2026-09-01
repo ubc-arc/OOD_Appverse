@@ -1,61 +1,178 @@
-# IGV Open OnDemand App
-An Open OnDemand app for running [IGV (Integrative Genomics Viewer)](https://igv.org/) 2.17.0 as a desktop GUI application via a VNC session.
-Part of the UBC ARC OOD Appverse collection.
+# UBC ARC OOD Appverse
 
-## Prerequisites
+## Overview
+
+UBC ARC OOD Appverse is a collection of Open OnDemand Batch Connect apps that launch scientific desktop GUI applications as interactive VNC sessions on HPC clusters. It is designed for researchers who need to run graphical bioinformatics and genomics tools without requiring local software installation or large file transfers.
+
+- Upstream project: [Open OnDemand](https://openondemand.org)
+- Part of the [OOD Appverse](https://openondemand.connectci.org/affinity-groups/ood-appverse)
+
+## Screenshots
+
+![IGV running in browser](docs/screenshot.png)
+
+## Apps Included
+
+| App | Software | Version | Description |
+|-----|----------|---------|-------------|
+| [igv_appverse](igv_appverse/) | IGV | 2.17.0 | Integrative Genomics Viewer for visualizing read alignments, variants, and gene annotations |
+| [bandage_appverse](bandage_appverse/) | Bandage | 0.9.0 | Assembly graph viewer for visualizing genome assembly graphs |
+| [fastqc_appverse](fastqc_appverse/) | FastQC | latest | Quality control tool for high throughput sequence data |
+| [mega_appverse](mega_appverse/) | MEGA | latest | Molecular Evolutionary Genetics Analysis |
+| [ugene_appverse](ugene_appverse/) | UGENE | latest | Integrated bioinformatics toolkit |
+
+## Features
+
+- Launches scientific GUI applications via VNC desktop session on compute nodes
+- Supports CPU execution
+- Configurable cores and wall time via the launch form
+- All apps containerized via Apptainer for reproducibility and portability
+- No local software installation required — runs entirely in the browser
+
+## Requirements
+
+### Compute Node Software
 
 - Apptainer 1.3.1+
+- Xfce window manager
+- Ubuntu 22.04 base OS
+
+### Open OnDemand
+
 - Open OnDemand 2.x+
-- A Slurm-based HPC cluster configured with Open OnDemand
+- Slurm scheduler
+- Lmod or Environment Modules
 
-## Container Contents
+### Optional
 
-| Component | Version |
-|-----------|---------|
-| Base OS | Ubuntu 22.04 |
-| IGV | 2.17.0 |
-| Java (bundled) | 17 (included with IGV) |
+- Custom genome or reference data files downloaded to a shared directory accessible from compute nodes
 
+## App Installation
 
-## Building the Container
-Build the container on a system with internet access (e.g. a login node):
-apptainer build --fakeroot igv.sif igv.def
+Please see the [References section](#software-installation) below for instructions on how to build the containers launched by these apps.
+
+### 1. Clone the repository
 
 
-## Setup
-1. Move the container to a shared directory accessible from compute nodes:
-mv igv.sif /path/to/apptainer_images/igv/igv.sif
+cd /var/www/ood/apps/sys
+git clone https://github.com/ubc-arc/OOD_Appverse.git
+cd OOD_Appverse
 
-2. Update `cluster` in `form.yml.erb` to match your cluster id (the filename without `.yml` under `/etc/ood/config/clusters.d/`):
-cluster: "mycluster"
+# Pin to a release (recommended)
+git checkout v0.1.0
 
-3. Update the `.sif` path in `form.yml.erb` to point to where you placed the container:
-options:
-  ["IGV 2.17.0", "/path/to/apptainer_images/igv/igv.sif"]
 
-4. Update `module load apptainer` in `script.sh` to match your cluster's module name if different.
+### 2. Configure for your site
 
-## Running IGV via Open OnDemand
-1. Log in to your Open OnDemand instance
-2. Navigate to **Interactive Apps** and select the IGV app
-3. Fill in the job parameters (account, queue, cores, walltime)
-4. Click **Launch**: a VNC desktop session will start with the IGV GUI open and ready to use
+Each app subdirectory contains its own `form.yml`, `submit.yml.erb`, `manifest.yml`, and `template/script.sh.erb`. Update the following in each app you want to deploy:
 
+#### form.yml Attributes
+
+| Attribute | Description | Default |
+|-----------|-------------|---------|
+| `cluster` | Target cluster ID | `"mycluster"` |
+| `bc_num_hours` max | Maximum wall time (hours) | `3` |
+| `bc_num_slots` max | Maximum cores | `40` |
+| version option path | Path to the .sif container on compute nodes | `"/path/to/apptainer_images/<app>/<app>.sif"` |
+
+#### manifest.yml Attributes
+
+| Attribute | Change to |
+|-----------|-----------|
+| `description` | Your cluster name and your documentation URL |
+
+#### Environment variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `genomeServerURL` | No | Path to a local `genomes.tsv` file for IGV custom genome server |
+
+### 3. Verify
+
+No OOD restart is needed. Visit your OOD dashboard and look for the apps under **Interactive Apps > Genomics**.
 
 ## Troubleshooting
-**IGV does not launch:**
-- Verify the `.sif` path in `form.yml.erb` is correct and the file exists on the compute node
 
-**Out of memory errors:**
-- Increase the number of cores in the job form (memory scales with cores)
-- The default memory allocation is 4GB; increase to 8GB or more for large datasets
+### Job starts but app does not appear
 
-**squashfuse / gocryptfs warnings on startup:**
-- These are harmless informational messages and can be safely ignored
+1. Check the job's `output.log` in `~/ondemand/data/sys/<app_name>/`
+2. Verify the `.sif` path in `form.yml` is correct and the file exists on the compute node
+3. Verify the Xfce window manager is installed: `which xfwm4`
+
+### Module not found error
+
+The module name in `template/script.sh.erb` does not match your system. Run `module spider apptainer` to find the correct name and update accordingly.
+
+### Out of memory errors
+
+The default memory is 4GB per core. Request more cores in the launch form to scale memory, or increase the `--mem-per-cpu` value in `submit.yml.erb`.
+
+### squashfuse / gocryptfs warnings on startup
+
+These are harmless informational messages from Apptainer and can be safely ignored.
+
+## Testing
+
+| Site | OOD Version | Scheduler | Status |
+|------|-------------|-----------|--------|
+| UBC ARC Sockeye | 2.x | Slurm | Tested |
+
+To verify your installation:
+
+1. Launch an app from the OOD dashboard with default settings
+2. Confirm the GUI loads in the VNC desktop session
+3. Load a data file and confirm it is displayed correctly
+
+## Known Limitations
+
+- Only tested on Ubuntu 22.04 base OS
+- Only CPU execution is supported; no GPU rendering
+- Internet access is required on the login node to build containers; compute nodes do not require it
+- Custom genome or reference files must be downloaded and configured locally before use
 
 ## Contributing
-Contributions are welcome. Please open an issue or submit a pull request on [GitHub](https://github.com/ubc-arc/OOD_Appverse).
+
+Contributions are welcome. To contribute:
+
+1. Fork this repository
+2. Create a feature branch (`git checkout -b feature/my-improvement`)
+3. Submit a pull request with a description of your changes
+
+For bugs or feature requests, [open an issue](https://github.com/ubc-arc/OOD_Appverse/issues).
+
+This repo is part of the [OOD Appverse](https://openondemand.connectci.org/affinity-groups/ood-appverse). Join the [Appverse Affinity Group](https://openondemand.connectci.org/affinity-groups/ood-appverse) to connect with other contributors.
+
+## References
+
+- [Open OnDemand](https://openondemand.org/) — the HPC portal framework
+- [Appverse Contributor Guide](https://github.com/Sweet-and-Fizzy/ood-appverse/blob/main/docs/appverse-contributor-guide.md)
+- [Appverse README Template](https://github.com/tamu-edu/appverse_readme_template)
+- [IGV](https://igv.org) — Integrative Genomics Viewer
+- [Bandage](https://github.com/rrwick/Bandage) — Assembly Graph Viewer
+- [FastQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/) — Quality Control Tool
+- [MEGA](https://www.megasoftware.net/) — Molecular Evolutionary Genetics Analysis
+- [UGENE](https://ugene.net/) — Integrated Bioinformatics Toolkit
+
+### Software Installation
+
+All apps in this repository are containerized using Apptainer. Each app subdirectory contains an Apptainer definition file (`.def`) that can be used to build the container from scratch.
+
+**General build instructions (run on a login node with internet access):**
+
+
+cd <app_directory>
+apptainer build --fakeroot <app>.sif <app>.def
+mv <app>.sif /path/to/apptainer_images/<app>/
+
+
+Update the container path in the app's `form.yml` to point to where you placed the `.sif` file. See each app's individual README for app-specific build instructions and configuration details.
 
 ## License
-- Documentation and container definition are licensed under [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/)
-- IGV is developed and maintained by the [Broad Institute](https://igv.org/) and is licensed separately. Please refer to the [IGV license](https://github.com/igvteam/igv/blob/master/license.txt) for terms of use
+
+Code is licensed under [MIT](LICENSE)
+
+Documentation is licensed under [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/)
+
+## Acknowledgments
+
+Developed and maintained by [UBC ARC (Advanced Research Computing)](https://arc.ubc.ca). For support, contact arc.support@ubc.ca or [open an issue](https://github.com/ubc-arc/OOD_Appverse/issues).
