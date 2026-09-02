@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
+set -euo pipefail
+
 module purge
 cd "${HOME}"
+
 # -----------------------------------------------------------------------
 # Set up VNC / Xfce desktop environment
 # -----------------------------------------------------------------------
@@ -9,18 +12,37 @@ export XDG_CONFIG_HOME="<%= session.staged_root.join("config") %>"
 export XDG_DATA_HOME="<%= session.staged_root.join("share") %>"
 export XDG_CACHE_HOME="$(mktemp -d)"
 export $(dbus-launch)
+
 xfwm4 --compositor=off --sm-client-disable &
 xsetroot -solid "#D3D3D3"
 xfsettingsd --sm-client-disable &
 xfdesktop --quit 2>/dev/null || true
+
 # -----------------------------------------------------------------------
 # Load required modules
+# Update the module name to match your cluster's module system
 # -----------------------------------------------------------------------
-module load gcc apptainer
+module load gcc apptainer || { echo "ERROR: Failed to load modules gcc apptainer"; exit 1; }
+
 echo "=== Environment ==="
 module list
 echo "DISPLAY=${DISPLAY}"
 glxinfo | grep -i render 2>/dev/null || echo "glxinfo not available"
+
+# -----------------------------------------------------------------------
+# Verify the container image exists before launching
+# -----------------------------------------------------------------------
+SIF="<%= context.version %>"
+if [[ -z "${SIF}" ]]; then
+  echo "ERROR: No container image selected."
+  exit 1
+fi
+if [[ ! -f "${SIF}" ]]; then
+  echo "ERROR: Container image not found: ${SIF}"
+  echo "Please build the container and update the path in form.yml."
+  exit 1
+fi
+
 # -----------------------------------------------------------------------
 # Launch FastQC GUI via Apptainer in the background
 # -----------------------------------------------------------------------
@@ -28,25 +50,30 @@ apptainer exec \
   --env DISPLAY="${DISPLAY}" \
   -B /tmp/.X11-unix:/tmp/.X11-unix \
   -B "${HOME}:${HOME}" \
-  "<%= context.version %>" fastqc &
-
+  "${SIF}" fastqc &
 FASTQC_PID=$!
 
+# -----------------------------------------------------------------------
 # Poll until FastQC window appears using wmctrl, then maximize
+# -----------------------------------------------------------------------
 echo "Waiting for FastQC window..."
 for i in $(seq 1 30); do
   sleep 2
+  if ! kill -0 $FASTQC_PID 2>/dev/null; then
+    echo "ERROR: FastQC process has exited unexpectedly."
+    exit 1
+  fi
   WIN_ID=$(apptainer exec \
     --env DISPLAY="${DISPLAY}" \
     -B /tmp/.X11-unix:/tmp/.X11-unix \
-    "<%= context.version %>" \
+    "${SIF}" \
     wmctrl -l 2>/dev/null | grep "FastQC" | tail -1 | awk '{print $1}')
-  if [ -n "${WIN_ID}" ]; then
+  if [[ -n "${WIN_ID}" ]]; then
     echo "FastQC window found (ID: ${WIN_ID}), maximizing..."
     apptainer exec \
       --env DISPLAY="${DISPLAY}" \
       -B /tmp/.X11-unix:/tmp/.X11-unix \
-      "<%= context.version %>" \
+      "${SIF}" \
       wmctrl -i -r "${WIN_ID}" -b add,maximized_vert,maximized_horz
     break
   fi

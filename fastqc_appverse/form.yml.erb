@@ -1,28 +1,35 @@
 ---
+# Set cluster to the id matching your /etc/ood/config/clusters.d/<cluster>.yml
 cluster: "mycluster"
 form:
   - version
   - auto_accounts
   - bc_num_hours
   - auto_queues
-  - num_cores
+  - bc_num_slots
   - bc_email_on_started
 attributes:
   bc_num_hours:
+    widget: number_field
+    min: 1
     max: 24
+    step: 1
+    value: 1
+    label: "Wall time (hours)"
     help: "Maximum walltime for the session (hours)."
-  num_cores:
-    widget: "number_field"
+    required: true
+  bc_num_slots:
+    widget: number_field
     label: "Number of cores"
     value: 1
-    help: |
-      Number of cores to request for the job (4 GB per core unless requesting whole node).
     min: 1
     max: 64
     step: 1
+    help: "Number of CPU cores to request (4 GB per core)."
+    required: true
   version:
     widget: select
     label: "FastQC version"
     help: "Select the version of FastQC to launch."
     options:
-      - ["FastQC 0.12.1", "/full/path/to/software/apptainer_images/fastqc/fastqc_0.12.1.sif"]
+      - ["FastQC 0.12.1", "/path/to/apptainer_images/fastqc/fastqc_0.12.1.sif"]
