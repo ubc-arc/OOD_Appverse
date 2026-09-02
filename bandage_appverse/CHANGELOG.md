@@ -2,7 +2,9 @@
 All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
+
 ## [Unreleased]
+
 ## [0.1.0] - 2026-03-26
 ### Added
 - Initial release of Bandage Open OnDemand app.
@@ -10,4 +12,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - VNC-based desktop session using Xfce window manager.
 - Form options for allocation code, number of cores, and session duration.
 - Support for Bandage interactive GUI via X11/VNC within the container.
-[Unreleased]: https://github.com/ubc-arc/OOD_Appverse
+
+[Unreleased]: https://github.com/ubc-arc/OOD_Appverse/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/ubc-arc/OOD_Appverse/releases/tag/v0.1.0

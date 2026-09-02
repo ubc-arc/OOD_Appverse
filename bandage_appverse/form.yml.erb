@@ -11,15 +11,23 @@ form:
   - bc_email_on_started
 attributes:
   bc_num_hours:
+    widget: number_field
+    min: 1
     max: 24
+    step: 1
+    value: 1
+    label: "Wall time (hours)"
     help: "Maximum walltime for the session (hours)."
+    required: true
   bc_num_slots:
+    widget: number_field
     label: "Number of cores"
     value: 1
     min: 1
     max: 64
     step: 1
-    help: "Number of CPU cores to request."
+    help: "Number of CPU cores to request (4 GB per core)."
+    required: true
   bc_vnc_resolution:
     required: true
   version:

@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+set -euo pipefail
+
 module purge
 cd "${HOME}"
 
@@ -10,6 +12,7 @@ export XDG_CONFIG_HOME="<%= session.staged_root.join("config") %>"
 export XDG_DATA_HOME="<%= session.staged_root.join("share") %>"
 export XDG_CACHE_HOME="$(mktemp -d)"
 export $(dbus-launch)
+
 xfwm4 --compositor=off --sm-client-disable &
 xsetroot -solid "#D3D3D3"
 xfsettingsd --sm-client-disable &
@@ -19,7 +22,8 @@ xfdesktop --quit 2>/dev/null || true
 # Load required modules
 # Update the module name to match your cluster's module system
 # -----------------------------------------------------------------------
-module load apptainer
+module load apptainer || { echo "ERROR: Failed to load module apptainer"; exit 1; }
+
 echo "=== Environment ==="
 module list
 echo "DISPLAY=${DISPLAY}"
@@ -29,9 +33,13 @@ glxinfo | grep -i render 2>/dev/null || echo "glxinfo not available"
 # Verify the container image exists before launching
 # -----------------------------------------------------------------------
 SIF="<%= context.version %>"
-if [ ! -f "${SIF}" ]; then
+if [[ -z "${SIF}" ]]; then
+  echo "ERROR: No container image selected."
+  exit 1
+fi
+if [[ ! -f "${SIF}" ]]; then
   echo "ERROR: Container image not found: ${SIF}"
-  echo "Please build the container and update the path in form.yml.erb."
+  echo "Please build the container and update the path in form.yml."
   exit 1
 fi
 
@@ -62,7 +70,7 @@ for i in $(seq 1 30); do
     -B /tmp/.X11-unix:/tmp/.X11-unix \
     "${SIF}" \
     xdotool search --name "Bandage" 2>/dev/null | tail -1)
-  if [ -n "${WIN_ID}" ]; then
+  if [[ -n "${WIN_ID}" ]]; then
     echo "Bandage window found (ID: ${WIN_ID}), maximizing..."
     apptainer exec \
       --env DISPLAY="${DISPLAY}" \
