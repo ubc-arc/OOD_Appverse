@@ -4,11 +4,6 @@
 
 FastQC is an Open OnDemand Batch Connect app that launches [FastQC 0.12.1](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/) as an interactive VNC desktop session on HPC clusters. It is designed for researchers who need to run quality control checks on high throughput sequencing data without requiring local software installation or large file transfers.
 
-- Upstream project: [FastQC - Babraham Institute](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
-
-## Screenshots
-
-![FastQC running in browser](docs/screenshot.png)
 
 ## Features
 
@@ -29,7 +24,7 @@ FastQC is an Open OnDemand Batch Connect app that launches [FastQC 0.12.1](https
 
 ### Open OnDemand
 
-- Open OnDemand 2.x+
+- Open OnDemand 3.x+
 - Slurm scheduler
 - Lmod or Environment Modules
 
@@ -87,27 +82,16 @@ No OOD restart is needed. Visit your OOD dashboard and look for **FastQC** under
 2. Verify the `.sif` path in `form.yml` is correct and the file exists on the compute node
 3. Verify the Xfce window manager is installed: `which xfwm4`
 
-### Module not found error
-
-Run `module spider apptainer` to find the correct module name for your cluster and update `template/script.sh.erb` accordingly.
-
-### Out of memory errors
-
-The default memory is 4GB per core. Request more cores in the launch form to scale memory, or increase the `--mem-per-cpu` value in `submit.yml.erb`.
-
 ### squashfuse / gocryptfs warnings on startup
 
 These are harmless informational messages from Apptainer and can be safely ignored.
 
-### FastQC window does not maximize
-
-The script polls up to 30 times (60 seconds) for the FastQC window to appear. If your cluster is slow to start the container, increase the loop count in `template/script.sh.erb`.
 
 ## Testing
 
 | Site | OOD Version | Scheduler | Status |
 |------|-------------|-----------|--------|
-| UBC ARC Sockeye | 2.x | Slurm | Tested |
+| UBC ARC Sockeye | 3.x | Slurm | Tested |
 
 To verify your installation:
 
@@ -118,7 +102,6 @@ To verify your installation:
 ## Known Limitations
 
 - Only tested on Ubuntu 22.04 base OS
-- Only CPU execution is supported; no GPU rendering
 - Internet access is required on the login node to build the container; compute nodes do not require it
 
 ## Contributing
@@ -139,7 +122,7 @@ This app is part of the [OOD Appverse](https://openondemand.connectci.org/affini
 - [FastQC License (GPL v3)](https://www.gnu.org/copyleft/gpl.html)
 - [Open OnDemand](https://openondemand.org/) — the HPC portal framework
 - [Appverse Contributor Guide](https://github.com/Sweet-and-Fizzy/ood-appverse/blob/main/docs/appverse-contributor-guide.md)
-- [Appverse README Template](https://github.com/tamu-edu/appverse_readme_template)
+
 
 ### Software Installation
 
