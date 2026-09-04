@@ -2,8 +2,10 @@
 name: UGENE (Unified Bioinformatics Environment)
 category: Interactive Apps
 subcategory: Genomics
-role: batch-connect-VNC
-description: "This app will launch a [UGENE] GUI on a compute node. You
-  will be able to interact with the UGENE GUI through a VNC session.[UGENE]:
-  https://ugene.net"
-icon: ''
+role: batch_connect
+description: |
+  This app will launch a UGENE GUI on a compute node.
+  You will be able to interact with the UGENE GUI through a VNC session.
+
+  [UGENE]: https://ugene.net
+icon: icon.png

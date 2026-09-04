@@ -24,7 +24,7 @@ From: ubuntu:22.04
             ugene_53.1.sif ugeneui
 
     Build:
-        apptainer build ugene_53.1.sif ugene_53.1.def
+        apptainer build --fakeroot ugene_53.1.sif ugene_53.1.def
 
     Bundled Tools (all pre-configured, no manual setup needed):
         BWA, Bowtie1, Bowtie2        Read mapping
