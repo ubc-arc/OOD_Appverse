@@ -4,11 +4,6 @@
 
 IGV is an Open OnDemand Batch Connect app that launches [IGV 2.17.0](https://igv.org) as an interactive VNC desktop session on HPC clusters. It is designed for researchers who need to visually explore and validate genomic data including read alignments, variants, and gene annotations.
 
-- Upstream project: [IGV - Broad Institute](https://igv.org)
-
-## Screenshots
-
-![IGV running in browser](docs/screenshot.png)
 
 ## Features
 
@@ -29,7 +24,7 @@ IGV is an Open OnDemand Batch Connect app that launches [IGV 2.17.0](https://igv
 
 ### Open OnDemand
 
-- Open OnDemand 2.x+
+- Open OnDemand 3.x+
 - Slurm scheduler
 - Lmod or Environment Modules
 
@@ -89,23 +84,17 @@ No OOD restart is needed. Visit your OOD dashboard and look for **IGV** under **
 2. Verify the `.sif` path in `form.yml` is correct and the file exists on the compute node
 3. Verify the Xfce window manager is installed: `which xfwm4`
 
-### Out of memory errors
-
-The default memory is 4GB per core. Request more cores in the launch form to scale memory, or increase the `--mem-per-cpu` value in `submit.yml.erb`.
 
 ### squashfuse / gocryptfs warnings on startup
 
 These are harmless informational messages from Apptainer and can be safely ignored.
 
-### Module not found error
-
-The module name in `template/script.sh.erb` does not match your system. Run `module spider apptainer` to find the correct name and update accordingly.
 
 ## Testing
 
 | Site | OOD Version | Scheduler | Status |
 |------|-------------|-----------|--------|
-| UBC ARC Sockeye | 2.x | Slurm | Tested |
+| UBC ARC Sockeye | 3.x | Slurm | Tested |
 
 To verify your installation:
 
@@ -118,7 +107,7 @@ To verify your installation:
 - Only tested on Ubuntu 22.04 base OS
 - Custom genome files must be downloaded and configured locally on the cluster before use — compute nodes do not have outbound internet access
 - Internet access is required on the login node to build the container
-- Only CPU execution is supported; no GPU rendering
+
 
 ## Contributing
 
@@ -138,7 +127,7 @@ This app is part of the [OOD Appverse](https://openondemand.connectci.org/affini
 - [IGV License](https://github.com/igvteam/igv/blob/master/license.txt)
 - [Open OnDemand](https://openondemand.org/) — the HPC portal framework
 - [Appverse Contributor Guide](https://github.com/Sweet-and-Fizzy/ood-appverse/blob/main/docs/appverse-contributor-guide.md)
-- [Appverse README Template](https://github.com/tamu-edu/appverse_readme_template)
+
 
 ### Software Installation
 
