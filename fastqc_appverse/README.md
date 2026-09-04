@@ -67,7 +67,7 @@ Edit `manifest.yml` and update these values for your organization:
 Update the `module load` line to match your cluster's module names:
 
 
-module load gcc apptainer
+module load apptainer
 
 
 ### 3. Verify
