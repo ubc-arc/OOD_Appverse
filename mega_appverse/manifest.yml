@@ -2,8 +2,9 @@
 name: MEGA (Molecular Evolutionary Genetics Analysis)
 category: Interactive Apps
 subcategory: Genomics
-role: batch-connect-VNC
-description: "This app will launch a [MEGA] GUI on a compute node. You
-  will be able to interact with the MEGA GUI through a VNC session. [MEGA]:
-  https://www.megasoftware.net/"
+role: batch_connect
+description: |
+  This app will launch a MEGA GUI on a compute node.
+  You will be able to interact with the MEGA GUI through a VNC session.
+  [MEGA]: https://www.megasoftware.net/
 icon: icon.png

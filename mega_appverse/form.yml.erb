@@ -6,29 +6,37 @@ form:
   - auto_accounts
   - bc_num_hours
   - auto_queues
-  - num_cores
+  - bc_num_slots
   - mem_per_cpu
   - bc_email_on_started
 attributes:
   bc_num_hours:
+    widget: number_field
+    min: 1
     max: 3
+    step: 1
+    value: 1
+    label: "Wall time (hours)"
     help: "Maximum walltime for the session (hours)."
-  num_cores:
-    widget: "number_field"
+    required: true
+  bc_num_slots:
+    widget: number_field
     label: "Number of cores"
     value: 1
     min: 1
     max: 40
     step: 1
     help: "Number of CPU cores to request."
+    required: true
   mem_per_cpu:
-    widget: "number_field"
+    widget: number_field
     label: "Memory per core (GB)"
     value: 4
     min: 1
     max: 64
     step: 1
     help: "Amount of memory per core in GB."
+    required: true
   version:
     widget: select
     label: "MEGA version"

@@ -2,8 +2,8 @@
 # Apptainer Definition File for MEGA 12 GUI
 # megasoftware.net
 #
-# BUILD (requires sudo):
-#   sudo apptainer build mega12_gui.sif /full/path/to/mega12_gui.def
+# BUILD (use --fakeroot on HPC login nodes without sudo):
+#   apptainer build --fakeroot mega12_gui.sif mega12_gui.def
 #
 # RUN GUI:
 #   apptainer run --env DISPLAY=$DISPLAY mega12_gui.sif
@@ -24,7 +24,7 @@ From: ubuntu:22.04
     MEGA 12 GUI — Apptainer container
 
     Build:
-      sudo apptainer build mega12_gui.sif /full/path/to/mega12_gui.def
+      apptainer build --fakeroot mega12_gui.sif /full/path/to/mega12_gui.def
 
     Run the GUI:
       apptainer run --env DISPLAY=$DISPLAY mega12_gui.sif
