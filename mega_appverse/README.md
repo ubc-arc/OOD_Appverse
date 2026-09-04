@@ -95,7 +95,7 @@ These are harmless informational messages from Apptainer and can be safely ignor
 
 | Site | OOD Version | Scheduler | Status |
 |------|-------------|-----------|--------|
-| UBC ARC Sockeye | 2.x | Slurm | Tested |
+| UBC ARC Sockeye | 3.x | Slurm | Tested |
 
 To verify your installation:
 
